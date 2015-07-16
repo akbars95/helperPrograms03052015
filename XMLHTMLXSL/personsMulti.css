@@ -1,0 +1,7 @@
+@CHARSET "UTF-8";
+
+.h2_persons{
+	color: green;
+	font-size: 19px;
+	font-weight: bold;
+}

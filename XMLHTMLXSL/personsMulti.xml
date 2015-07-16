@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<persons>
+	<person id="1">
+		<firstname>Mynzat</firstname>
+		<lastname>Dmitrii</lastname>
+		<nickname>MTSMDA</nickname>
+		<dateOfBirth>23.12.1990</dateOfBirth>
+	</person>
+	<person id="2">
+		<firstname>Andreev</firstname>
+		<lastname>Andrei</lastname>
+		<nickname>Andrei</nickname>
+		<dateOfBirth>20.02.1933</dateOfBirth>
+	</person>
+	<person id="3">
+		<firstname>Pavlov</firstname>
+		<lastname>Pavel</lastname>
+		<nickname>Pavlusha</nickname>
+		<dateOfBirth>18.03.1992</dateOfBirth>
+	</person>
+	<person id="4">
+		<firstname>Artemov</firstname>
+		<lastname>Artem</lastname>
+		<nickname>Artemcik</nickname>
+		<dateOfBirth>11.01.1982</dateOfBirth>
+	</person>
+	<person id="5">
+		<firstname>Evgeniev</firstname>
+		<lastname>Evgenii</lastname>
+		<nickname>Evgusha</nickname>
+		<dateOfBirth>21.10.1989</dateOfBirth>
+	</person>
+</persons>
