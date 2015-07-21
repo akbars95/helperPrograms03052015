@@ -16,16 +16,17 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.util.*;
 
 /**
  * Created by c-DMITMINZ on 17.07.2015.
  */
 public class EdifecsToolFX extends Application {
 
+    //
     private VBox vBoxMain;
     private Properties propertiesData = new Properties();
 
@@ -46,6 +47,7 @@ public class EdifecsToolFX extends Application {
 
     private Menu menuEAM = new Menu("EAM");
     private MenuItem menuItemClearEAM = new MenuItem("Clear EAM");
+    private MenuItem menuItemSetTracerForProfiles = new MenuItem("Set tracer for profiles");
 
     private Menu menuWindows = new Menu("Windows");
     private Menu menuItemMenuWindowsServices = new Menu("Services");
@@ -54,8 +56,6 @@ public class EdifecsToolFX extends Application {
     private Menu menuItemMenuWindowsProcesses = new Menu("Processes");
     private MenuItem menuItemMenuWindowsServicesStartStandardProcesses = new MenuItem("Start standard processes");
     private MenuItem menuItemMenuWindowsServicesStopStandardProcesses = new MenuItem("Stop standard processes");
-
-
 
 
     private List<String> services = new ArrayList<String>();
@@ -99,7 +99,7 @@ public class EdifecsToolFX extends Application {
         menuMain.getItems().addAll(menuItemSetPaths, new SeparatorMenuItem(), menuItemExit);
         menuTM.getItems().addAll(menuItemTMClearDatabase, menuItemTMInstall, menuItemTMUninstall, menuItemTMUninstallAndInstall);
         menuRRM.getItems().addAll(menuItemDeleteAll, menuItemDeleteRRM);
-        menuEAM.getItems().addAll(menuItemClearEAM);
+        menuEAM.getItems().addAll(menuItemClearEAM, menuItemSetTracerForProfiles);
         menuWindows.getItems().addAll(menuItemMenuWindowsServices, menuItemMenuWindowsProcesses);
         menuItemMenuWindowsServices.getItems().addAll(menuItemMenuWindowsServicesStartStandardServices, menuItemMenuWindowsServicesStopStandardServices);
         menuItemMenuWindowsProcesses.getItems().addAll(menuItemMenuWindowsServicesStartStandardProcesses, menuItemMenuWindowsServicesStopStandardProcesses);
@@ -172,15 +172,100 @@ public class EdifecsToolFX extends Application {
             }
         });
 
+        menuItemSetTracerForProfiles.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                menuItemSetTracerForProfiles();
+            }
+        });
 
     }
 
-    private void menuItemClearEAM(){
-        if(stringIsNotNULLOrEmpty(propertiesData.getProperty("edifecs.home")) && stringIsNotNULLOrEmpty(propertiesData.getProperty("eam.logs"))){
+    private void menuItemClearEAM() {
+        if (stringIsNotNULLOrEmpty(propertiesData.getProperty("edifecs.home")) && stringIsNotNULLOrEmpty(propertiesData.getProperty("eam.logs"))) {
             AlertMTSMDA.getConfirmationAlert("Confirmation", "Do you want delete logs?", "Clear logs folder");
-        }else{
+        } else {
             AlertMTSMDA.getStandardAlert(Alert.AlertType.ERROR, "ERROR", "Not found properties", "Not found properties!");
         }
+    }
+
+    private void menuItemSetTracerForProfiles() {
+        GridPane gridPane = new GridPane();
+        gridPane.setPadding(new Insets(5));
+        gridPane.setHgap(5);
+        gridPane.setVgap(5);
+        gridPane.setVisible(true);
+
+        if (stringIsNotNULLOrEmpty(propertiesData.getProperty("edifecs.home"))) {
+            File fileProfiles = new File(propertiesData.getProperty("edifecs.home") + File.separator + "XEServer\\profiles\\");
+            int count = 0;
+            Set<SaveTracerProfile> saveTracerProfiles = new LinkedHashSet<SaveTracerProfile>();
+            Properties propertiesEAMTracer = new Properties();
+            if (fileProfiles.exists() && fileProfiles.isDirectory()) {
+                if (fileProfiles.listFiles().length != 0) {
+                    for (File currentProfile : fileProfiles.listFiles()) {
+                        File currentProfileRRMTracerProperties = new File(currentProfile + File.separator + "config\\environment\\RRM_Tracer_Properties.properties");
+                        if (currentProfileRRMTracerProperties.exists() && currentProfileRRMTracerProperties.isFile()) {
+                            Label label = new Label(currentProfile.getName());
+                            GridPane.setHalignment(label, HPos.LEFT);
+                            gridPane.add(label, 0, count);
+
+                            final ComboBox<String> stringComboBox = new ComboBox<>();
+                            stringComboBox.setOnAction(new EventHandler<ActionEvent>() {
+                                @Override
+                                public void handle(ActionEvent event) {
+                                    propertiesEAMTracer.put("RRM_Global_Tracer_Enabler", stringComboBox.getValue());
+                                    saveTracerProfiles.add(new SaveTracerProfile(currentProfileRRMTracerProperties, propertiesEAMTracer));
+                                }
+                            });
+                            try {
+                                stringComboBox.getItems().add("tracer.never");
+                                stringComboBox.getItems().add("tracer.always");
+                                propertiesEAMTracer.load(new FileInputStream(currentProfileRRMTracerProperties));
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            if (stringIsNotNULLOrEmpty(propertiesEAMTracer.getProperty("RRM_Global_Tracer_Enabler"))) {
+                                stringComboBox.setValue(propertiesEAMTracer.getProperty("RRM_Global_Tracer_Enabler"));
+                            }
+
+                            GridPane.setHalignment(stringComboBox, HPos.LEFT);
+                            gridPane.add(stringComboBox, 1, count);
+
+                            count++;
+                        }
+                    }
+                }
+            }
+            Button buttonSave = new Button("Save");
+            buttonSave.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    try {
+                        StringBuilder successSave = new StringBuilder();
+                        if (!saveTracerProfiles.isEmpty()) {
+                            for (SaveTracerProfile currentProfileRRMTracerProperties : saveTracerProfiles) {
+                                FileOutputStream fileOutputStream = new FileOutputStream(currentProfileRRMTracerProperties.getFile());
+                                currentProfileRRMTracerProperties.getProperties().store(fileOutputStream, new Date().toString());
+                                successSave.append(currentProfileRRMTracerProperties.getFile().getAbsoluteFile()).append("\n");
+                            }
+                        }
+                        AlertMTSMDA.getStandardAlert(Alert.AlertType.INFORMATION, "Information!", "Save Tracer Settings", successSave.length() == 0 ? "You nothing not changed!" : successSave.toString());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        AlertMTSMDA.getStandardAlert(Alert.AlertType.ERROR, "Error!", "Error in Save Tracer Settings", "Error message - " + e.getMessage());
+                    }
+                    if(!saveTracerProfiles.isEmpty()){
+                        saveTracerProfiles.clear();
+                    }
+                }
+            });
+            GridPane.setHalignment(buttonSave, HPos.LEFT);
+            gridPane.add(buttonSave, 1, count + 2);
+        }
+
+
+        switchMenu(gridPane);
     }
 
     private void setMenuItemSetPaths() {
@@ -214,7 +299,9 @@ public class EdifecsToolFX extends Application {
         if (propertiesData.get("edifecs.home").toString() != null && !propertiesData.get("edifecs.home").toString().trim().isEmpty()) {
             File batFile = new File(propertiesData.get("edifecs.home").toString() + File.separator + "TM\\ServiceManager\\tools\\gbd-cleanup\\cleanup-transactions-data.bat");
             if (batFile.exists()) {
+                StringBuilder text = new StringBuilder();
                 try {
+
                     int g;
 
                     Process process = Runtime.getRuntime().exec(batFile.getAbsolutePath());
@@ -224,15 +311,17 @@ public class EdifecsToolFX extends Application {
                     }
 
                     while ((g = process.getInputStream().read()) != -1) {
-                        System.out.print(((char) g));
+                        text.append(((char) g));
                     }
 
                     while ((g = process.getErrorStream().read()) != -1) {
-                        System.out.print(((char) g));
+                        text.append(((char) g));
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
+                    text.append(e.getMessage());
                 }
+                /*AlertMTSMDA.getStandardAlert(Alert.AlertType.INFORMATION);*/
             }
         }
     }
@@ -301,21 +390,21 @@ public class EdifecsToolFX extends Application {
         }
     }
 
-    private void edifecsStopServices(String processStopOrStart){
+    private void edifecsStopServices(String processStopOrStart) {
         edifecsStopServicesParamPropertyName(processStopOrStart, "tm.service");
         edifecsStopServicesParamPropertyName(processStopOrStart, "apacheMQ.service");
         edifecsStopServicesParamPropertyName(processStopOrStart, "tomcat7.service");
     }
 
-    private void edifecsStopServicesParamPropertyName(String processStopOrStart, String propertyName){
-        if(propertiesData.getProperty(propertyName) != null && !propertiesData.getProperty(propertyName).isEmpty()){
-            if(propertiesData.getProperty(propertyName).contains(",")){
+    private void edifecsStopServicesParamPropertyName(String processStopOrStart, String propertyName) {
+        if (propertiesData.getProperty(propertyName) != null && !propertiesData.getProperty(propertyName).isEmpty()) {
+            if (propertiesData.getProperty(propertyName).contains(",")) {
                 String tmServices[] = propertiesData.getProperty(propertyName).split(",");
-                for (String serviceCurrent : tmServices){
+                for (String serviceCurrent : tmServices) {
                     WindowsServiceAndProcesses.process(serviceCurrent, processStopOrStart);
                 }
-            }else{
-            WindowsServiceAndProcesses.process(propertiesData.getProperty(propertyName), processStopOrStart);
+            } else {
+                WindowsServiceAndProcesses.process(propertiesData.getProperty(propertyName), processStopOrStart);
             }
         }
     }
@@ -331,8 +420,8 @@ public class EdifecsToolFX extends Application {
         switchMenu(gridpane);
     }
 
-    private static boolean stringIsNotNULLOrEmpty(String string){
-        if(string != null && !string.trim().isEmpty()){
+    private static boolean stringIsNotNULLOrEmpty(String string) {
+        if (string != null && !string.trim().isEmpty()) {
             return true;
         }
         return false;
@@ -355,5 +444,42 @@ enum EnumDelete {
 
     public int getType() {
         return type;
+    }
+}
+
+class SaveTracerProfile {
+    private File file;
+    private Properties properties;
+
+    public SaveTracerProfile(File file, Properties properties) {
+        this.file = file;
+        this.properties = properties;
+    }
+
+    public File getFile() {
+        return file;
+    }
+
+    public Properties getProperties() {
+        return properties;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        SaveTracerProfile that = (SaveTracerProfile) o;
+
+        if (file != null ? !file.equals(that.file) : that.file != null) return false;
+        return !(properties != null ? !properties.equals(that.properties) : that.properties != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = file != null ? file.hashCode() : 0;
+        result = 31 * result + (properties != null ? properties.hashCode() : 0);
+        return result;
     }
 }
