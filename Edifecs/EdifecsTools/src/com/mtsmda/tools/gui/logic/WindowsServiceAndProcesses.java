@@ -1,5 +1,9 @@
 package com.mtsmda.tools.gui.logic;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Properties;
+
 /**
  * Created by c-DMITMINZ on 17.07.2015.
  */
@@ -31,28 +35,46 @@ public class WindowsServiceAndProcesses {
         return true;
     }
 
-    public static boolean process(String processName, String startOrStop){
-        try {
-            Runtime runtime = Runtime.getRuntime();
-            Process process = runtime.exec(new String[]{SERVICE, startOrStop, processName});
-            int f = process.waitFor();
-            System.out.println(f);
-            int c;
-            while ((c = process.getInputStream().read()) != -1) {
-                System.out.print((char) c);
+    public static Properties process(String processName, String startOrStop){
+        Properties propertiesResult = new Properties();
+        propertiesResult.setProperty(ResultEnum.PROCESS_NAME.name(), processName);
+            try {
+                StringBuilder stringBuilder = new StringBuilder();
+                Runtime runtime = Runtime.getRuntime();
+                Process process = runtime.exec(new String[]{SERVICE, startOrStop, processName});
+                int f = process.waitFor();
+                System.out.println(f);
+                int c;
+                while ((c = process.getInputStream().read()) != -1) {
+                    stringBuilder.append(((char) c));
+                }
+                propertiesResult.setProperty(ResultEnum.RESULT.name(), stringBuilder.toString());
             }
-        } catch (Exception e) {
-            return false;
+            catch (Exception e){
+                propertiesResult.setProperty(ResultEnum.EXCEPTION.name(), e.getMessage());
+            }
+        return propertiesResult;
+    }
+
+    public static String runBatFile(File fileName) throws Exception {
+        StringBuilder stringBuilderResult = new StringBuilder();
+        Runtime runtime = Runtime.getRuntime();
+        Process process = runtime.exec(fileName.getAbsolutePath().substring(0,2) +  " cd " + fileName.getParent() + /*SERVICE_START + " " + */fileName.getAbsolutePath());
+        int f = process.waitFor();
+        System.out.println(f);
+        int c;
+        while ((c = process.getInputStream().read()) != -1) {
+            stringBuilderResult.append(((char) c));
         }
-        return true;
+        return stringBuilderResult.toString();
     }
 
     public static void main(String[] args) {
-        process("EAMService", SERVICE_STOP);
+        /*process("EAMService", SERVICE_STOP);
         process("EdifecsTMETLResubmission", SERVICE_STOP);
         process("EdifecsTMServiceManager", SERVICE_STOP);
         process("ActiveMQ", SERVICE_STOP);
-        process("Tomcat7", SERVICE_STOP);
+        process("Tomcat7", SERVICE_STOP);*/
         //process("AdobeARMservice", SERVICE_START);
     }
 }
