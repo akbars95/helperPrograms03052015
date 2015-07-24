@@ -1,5 +1,8 @@
 package com.mtsmda.tools.gui.logic;
 
+import com.mtsmda.tools.gui.util.CollectionUtil;
+import com.mtsmda.tools.gui.util.FileUtil;
+import com.mtsmda.tools.gui.util.StringUtil;
 import jdk.internal.org.xml.sax.ErrorHandler;
 import jdk.internal.org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -20,7 +23,7 @@ import java.util.List;
 public class XMLValidationXSD {
 
     public static void main(String[] args) throws Exception {
-//        String parent = "C:\\PROJECTS\\IntegrationFramework\\src\\test\\resources\\integrationTestData\\CA_RX\\CA_RX_2.2\\";
+/*//        String parent = "C:\\PROJECTS\\IntegrationFramework\\src\\test\\resources\\integrationTestData\\CA_RX\\CA_RX_2.2\\";
         String parent = "c:\\PROJECTS\\IntegrationFramework\\src\\test\\resources\\integrationTestData\\CA_RX\\CA_RX_4.2\\";
         String xsd = "C:\\Edifecs\\ArtifactsRepository\\Guidelines\\EdctResponse.xsd";
         List<String> paths = new ArrayList<>();
@@ -34,7 +37,7 @@ public class XMLValidationXSD {
                 System.out.println(saxParseException.getMessage());
             }
 
-        }
+        }*/
 
 
     }
@@ -92,6 +95,12 @@ public class XMLValidationXSD {
         }
         return exceptions;
     }
+
+
+
+
+
+
 
 
 

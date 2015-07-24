@@ -1,8 +1,8 @@
 package com.mtsmda.tools.gui;
 
-import com.mtsmda.tools.gui.logic.FileSystem;
 import com.mtsmda.tools.gui.logic.WindowsServiceAndProcesses;
 import com.mtsmda.tools.gui.ui.AlertMTSMDA;
+import com.mtsmda.tools.gui.util.FileDirectoryUtil;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -18,7 +18,6 @@ import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.*;
 
@@ -418,7 +417,7 @@ public class EdifecsToolFX extends Application {
                 if (!files.isEmpty()) {
                     count = files.size();
                     for (File current : files) {
-                        FileSystem.deleteFile(current);
+                        FileDirectoryUtil.deleteFile(current);
                     }
                 }
 
@@ -438,7 +437,7 @@ public class EdifecsToolFX extends Application {
                 report.append(files.size()).append(" file(s) available for delete").append("\n");
                 if (!files.isEmpty()) {
                     for (File current : files) {
-                        FileSystem.deleteFile(current);
+                        FileDirectoryUtil.deleteFile(current);
                         report.append(current.getAbsoluteFile()).append(" deteled\n");
                     }
                 }
